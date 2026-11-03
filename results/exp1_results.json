@@ -13,13 +13,13 @@
   "domination_violation": 0.003491789710801385,
   "generator_consistency": {
     "f_plus": {
-      "max_diff_vs_G": 0.1947631329437008
+      "max_diff_vs_G": 0.0469116247167809
     },
     "gaussian": {
-      "max_diff_vs_G": 0.17779934228123057
+      "max_diff_vs_G": 0.09480884778771276
     },
     "tanh": {
-      "max_diff_vs_G": 0.35984192910243196
+      "max_diff_vs_G": 0.14160537204539891
     }
   },
   "V_vals_at_t0": {

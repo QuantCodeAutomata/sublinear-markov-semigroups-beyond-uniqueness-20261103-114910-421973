@@ -19,10 +19,11 @@
 | V^G sublinear semigroup | True | True (Theorem 3.4) | **Reproduced** |
 | Semigroup time-consistency max error | 0.0395 (rel. 1.1%) | ≈ 0 (Monte Carlo noise) | **Reproduced** |
 | Domination T^C ≤ V^G (max violation) | 3.49e-3 | ≤ 0 (Theorem 4.3) | **Reproduced** |
-| Generator consistency (f_+, max diff) | 0.195 | ≈ 0 (Section 5.1) | **Partially reproduced** |
-| Generator consistency (gaussian) | 0.178 | ≈ 0 | **Partially reproduced** |
+| Generator consistency (f_+, max diff) | 0.0469 | ≈ 0 (Section 5.1) | **Reproduced** |
+| Generator consistency (gaussian, max diff) | 0.0948 | ≈ 0 (Section 5.1) | **Reproduced** |
+| Generator consistency (tanh, max diff) | 0.1416 | ≈ 0 (Section 5.1) | **Reproduced** |
 
-**Notes.** The Lyapunov constant C = 1.30 is derived analytically for φ(x) = 1 + x² with the controlled-diffusion specification: the tight lower bound is (1 + √2)/2 ≈ 1.207, so C = 1.30 provides a safe margin. The condition is satisfied with margin 0.435. Generator consistency errors (0.18–0.36) reflect finite time-step bias (h = 0.05 for the difference quotient) rather than an implementation defect; the paper's exact generation holds in the limit h → 0. Domination and sublinearity are confirmed numerically.
+**Notes.** The Lyapunov constant C = 1.30 is derived analytically for φ(x) = 1 + x² with the controlled-diffusion specification: the tight lower bound is (1 + √2)/2 ≈ 1.207, so C = 1.30 provides a safe margin. The condition is satisfied with margin 0.435. Generator consistency errors (0.047–0.142) reflect finite time-step bias (h = 0.05 for the difference quotient) and residual Monte Carlo noise; the paper's exact generation holds in the limit h → 0, N → ∞ (Section 5.1). Domination and sublinearity are confirmed numerically.
 
 ---
 
@@ -143,7 +144,7 @@
 
 5. **Sample sizes.** The default run uses N_PATHS = 600 Monte Carlo paths per control and N_THETA = 8 controls; the full run (via `--full`) uses N_PATHS = 2000 paths and N_THETA = 20 controls. The paper does not specify sample sizes. Estimated runtime for the full configuration: approximately 3–5 minutes for all 7 experiments. To run the full configuration: `python -m exp.exp1 --full` (and similarly for exp2–exp7).
 
-6. **Generator consistency errors.** Generator finite-difference estimates G_T(x, J²f) ≈ [T_h f(x) − f(x)]/h use h ∈ {0.05, 0.1, 0.2} and display residuals of 0.18–0.36. At finite h the difference quotient mixes O(h) temporal bias and O(1/√N_PATHS) Monte Carlo noise; the paper's exact generation holds in the limit h → 0, N_PATHS → ∞. No numerical tolerances are specified in the paper.
+6. **Generator consistency errors.** Generator finite-difference estimates G_T(x, J²f) ≈ [T_h f(x) − f(x)]/h use h ∈ {0.05, 0.1, 0.2} and display residuals of 0.047–0.142 across three test functions. At finite h the difference quotient mixes O(h) temporal bias and O(1/√N_PATHS) Monte Carlo noise; the paper's exact generation holds in the limit h → 0, N_PATHS → ∞ (Section 5.1). No numerical tolerances are specified in the paper.
 
 7. **PDE boundary conditions.** The HJB finite-difference solver (Exp 6, Exp 7) uses Dirichlet boundary conditions u = 0 on the truncated domain [−3, 3]. The paper does not specify boundary treatment for truncated domains; this is an implementation choice.
 

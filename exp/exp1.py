@@ -171,7 +171,7 @@ def run_exp1(full_run: bool = False) -> dict:
         f_fn = lambda x, _f=fn_dict["f_arr"], _xg=x_grid: np.interp(x, _xg, _f)
         rng_gen = np.random.default_rng(config.SEED + 300)
         eval_kw = dict(
-            n_paths=max(n_paths // 4, 500), dt=config.DT, controls=controls, rng=rng_gen
+            n_paths=n_paths, dt=config.DT, controls=controls, rng=rng_gen
         )
         gen_res = estimate_generator(
             SemigroupType.CONTROLLED, x_grid[10:51:5], f_fn,
