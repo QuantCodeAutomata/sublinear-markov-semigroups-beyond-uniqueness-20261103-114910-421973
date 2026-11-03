@@ -61,6 +61,10 @@ CTRL_SIGMA_MAX = 1.0  # maximum diffusion coefficient; not specified in the pape
 CTRL_B_MIN = -0.5     # minimum drift; not specified in the paper
 CTRL_B_MAX = 0.5      # maximum drift; not specified in the paper
 CTRL_C_MAX = 0.3      # maximum killing rate (k = -c >= 0); not specified in the paper
+# Lyapunov constant C for phi(x)=1+x^2: G(x,phi,Dphi,D2phi) <= C*phi(x).
+# For sigma_max=1, b_max=0.5, c=0 worst-case: requires C >= (1+sqrt(2))/2 ≈ 1.207.
+# Use 1.30 for safety margin.  Derived analytically; paper does not specify.
+CTRL_C_PHI = 1.30
 
 # ---------------------------------------------------------------------------
 # HJB PDE solver parameters (Section 5.2; monotone scheme not specified)
@@ -81,8 +85,8 @@ N_TEST_MULT = 4      # number of cylinder multipliers F; not specified
 # Full-run vs reduced-run selector (no reduction needed: pure math, no data)
 # ---------------------------------------------------------------------------
 FULL_RUN = False     # set to True (via --full flag) for larger N_PATHS / N_THETA
-N_PATHS_FULL = 20000
-N_THETA_FULL = 50
+N_PATHS_FULL = 2000   # feasible full config (~8x default); paper does not specify
+N_THETA_FULL = 20     # feasible full config (~2.5x default); paper does not specify
 
 # ---------------------------------------------------------------------------
 # Convenience aliases

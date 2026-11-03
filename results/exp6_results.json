@@ -6,9 +6,9 @@
     "0.5": 0.0071106190090737265,
     "1.0": 0.01346972563689286
   },
-  "ctrl_max_err": 0.0638580642502716,
-  "ctrl_mean_err": 0.015106832744536907,
-  "ctrl_rel_err": 0.043368326931995924,
+  "ctrl_max_err": 0.04569063949201482,
+  "ctrl_mean_err": 0.01118250381245341,
+  "ctrl_rel_err": 0.028673540831898423,
   "ctrl_pde_stochastic_consistent": true,
   "ctrl_pde_dominates_single_frac": 1.0
 }

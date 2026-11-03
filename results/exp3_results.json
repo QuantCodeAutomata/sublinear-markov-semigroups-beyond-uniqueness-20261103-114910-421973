@@ -1,9 +1,9 @@
 {
   "experiment": "exp3",
   "generator_bound_satisfied": true,
-  "gen_bound_max_violation": 0.13127163275003667,
+  "gen_bound_max_violation": 0.09141371420399719,
   "semigroup_dominated": true,
-  "domination_max_violation": 0.011978356485163544,
+  "domination_max_violation": 0.021028357994702596,
   "RT_in_PG": true,
   "all_conditions_consistent": true,
   "truth_table": {

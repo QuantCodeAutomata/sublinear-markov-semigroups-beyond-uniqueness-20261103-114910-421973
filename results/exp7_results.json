@@ -2,17 +2,17 @@
   "experiment": "exp7",
   "feller_continuity": {
     "gaussian": {
-      "max_jump_V": 0.0689642751247041,
+      "max_jump_V": 0.056658953449129745,
       "max_jump_f": 0.06045623307292425,
       "continuous": true
     },
     "tanh": {
-      "max_jump_V": 0.09818960053061052,
+      "max_jump_V": 0.09502746786585597,
       "max_jump_f": 0.0996679946249559,
       "continuous": true
     },
     "f_plus": {
-      "max_jump_V": 0.06529116634140081,
+      "max_jump_V": 0.0639567052159336,
       "max_jump_f": 0.06470588235294122,
       "continuous": true
     }
@@ -26,18 +26,18 @@
     0.01
   ],
   "luconv_errors": [
-    0.06662775176282842,
-    0.04042952196976657,
-    0.024778200977016884,
-    0.014681104863837002,
-    0.009238364527590026
+    0.07784040679168658,
+    0.035306767582929166,
+    0.021497198979667564,
+    0.009727767247363461,
+    0.006417020616616309
   ],
   "luconv_decreasing": true,
-  "luconv_final_error": 0.009238364527590026,
-  "pde_max_err": 0.04328938085861634,
-  "pde_mean_err": 0.0115570446890686,
+  "luconv_final_error": 0.006417020616616309,
+  "pde_max_err": 0.03932200270587216,
+  "pde_mean_err": 0.00783324976769087,
   "pde_stochastic_agree": true,
   "dominated_T_sub_leq_VG": true,
   "dominated_T_sub_strictly_below": true,
-  "mean_gap_VG_minus_T_sub": 0.020470882099878636
+  "mean_gap_VG_minus_T_sub": 0.010132857558281147
 }

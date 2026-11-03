@@ -4,9 +4,9 @@
   "G_globally_realizable_ex42": false,
   "same_semigroup_ex42": true,
   "controlled_diff_G_Gd": [
-    0.42767309264843467,
-    0.42623066001428034,
-    0.37639345573510863
+    0.45210381735619576,
+    0.4723391217817885,
+    0.2816745150496738
   ],
   "ctrl_approximately_realizable": false,
   "gen_downarrow_estimates": {

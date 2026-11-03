@@ -88,9 +88,11 @@ def run_exp1(full_run: bool = False) -> dict:
     p_test = np.ones_like(x_test)
     H_test = np.ones_like(x_test)
 
+    # c_phi derived analytically: for phi=1+x^2, sigma_max=1, b_max=0.5,
+    # the tight bound requires C >= (1+sqrt(2))/2 ≈ 1.207; use config.CTRL_C_PHI=1.30.
     lyap = check_lyapunov(
         G, phi_quadratic, grad_phi_quadratic, hess_phi_quadratic,
-        x_grid, c_phi=config.CTRL_C_MAX + 0.5 * config.CTRL_SIGMA_MAX ** 2,
+        x_grid, c_phi=config.CTRL_C_PHI,
         sigma_vals=sigma_arr, b_vals=b_arr, c_vals=c_arr,
     )
     sublin = check_sublinearity(
