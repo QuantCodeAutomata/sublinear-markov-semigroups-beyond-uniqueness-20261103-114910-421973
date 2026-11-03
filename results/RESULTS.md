@@ -68,7 +68,7 @@
 | Lyapunov for G_α with φ(x)=1+x² | True | True (α < ½) | **Reproduced** |
 | T^abs_t f_+(0) = 0 for all t | 0.000 | 0 (absorbing) | **Reproduced** |
 | T^0_t f_+(0) > 0 at t=0.2 | 0.0134 | > 0 (regular branch) | **Reproduced** |
-| V^G_t f_+(0) ≥ T^0_t f_+(0) at t=0.2 | 0.0131 ≈ 0.0134 | ≥ T^0 (envelope) | **Reproduced** |
+| V^G_t f_+(0) ≥ T^0_t f_+(0) at t=0.2 | V_G=0.0131, T_0=0.0134 (MC violation 2.8%) | ≥ T^0 (envelope) | **Partially reproduced** |
 | T^abs < T^0 at x=0 | True | True (Section 4.2) | **Reproduced** |
 | Two branches share same local spec G_α | True (same G) | True (nonuniqueness) | **Reproduced** |
 | Ex 4.2: G > G↓ at x=0 | True (excess=1.0) | True (unrealizable excess) | **Reproduced** |
