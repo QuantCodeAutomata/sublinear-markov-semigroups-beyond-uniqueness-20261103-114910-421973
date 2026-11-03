@@ -17,10 +17,29 @@ Paper sections: Definition 2.3, Lemma 2.2, Assumption 2.2 (pp. 9-10).
 
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass
 from typing import Callable, Optional
 
 import numpy as np
+
+
+def _call_g(g_fn: Callable, x, z, p, H, g_kwargs: dict) -> np.ndarray:
+    """Call g_fn(x, z, p, H), forwarding g_kwargs only when g_fn accepts **kwargs.
+
+    Allows check functions to accept extra control-array kwargs for raw
+    G implementations while also working with closures that already capture
+    those arrays (and therefore declare only four positional parameters).
+    """
+    if not g_kwargs:
+        return g_fn(x, z, p, H)
+    params = inspect.signature(g_fn).parameters
+    has_var_kw = any(
+        p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values()
+    )
+    if has_var_kw:
+        return g_fn(x, z, p, H, **g_kwargs)
+    return g_fn(x, z, p, H)
 
 
 # ---------------------------------------------------------------------------
@@ -283,13 +302,13 @@ def check_sublinearity(
     z2, p2, H2 = jets_2
 
     # Homogeneity: G(x, lambda*U1) = lambda * G(x, U1)
-    G_U1 = g_fn(x_test, z1, p1, H1, **g_kwargs)
-    G_lU1 = g_fn(x_test, lamda * z1, lamda * p1, lamda * H1, **g_kwargs)
+    G_U1 = _call_g(g_fn, x_test, z1, p1, H1, g_kwargs)
+    G_lU1 = _call_g(g_fn, x_test, lamda * z1, lamda * p1, lamda * H1, g_kwargs)
     hom_err = np.max(np.abs(G_lU1 - lamda * G_U1))
 
     # Subadditivity: G(x, U1+U2) <= G(x,U1) + G(x,U2)
-    G_U2 = g_fn(x_test, z2, p2, H2, **g_kwargs)
-    G_sum = g_fn(x_test, z1 + z2, p1 + p2, H1 + H2, **g_kwargs)
+    G_U2 = _call_g(g_fn, x_test, z2, p2, H2, g_kwargs)
+    G_sum = _call_g(g_fn, x_test, z1 + z2, p1 + p2, H1 + H2, g_kwargs)
     sub_viol = np.max(G_sum - (G_U1 + G_U2))
 
     return {
@@ -312,8 +331,8 @@ def check_monotonicity_H(
 
     Paper: condition (G2), p. 9.
     """
-    G_base = g_fn(x_test, z_test, p_test, H_base, **g_kwargs)
-    G_plus = g_fn(x_test, z_test, p_test, H_base + dH, **g_kwargs)
+    G_base = _call_g(g_fn, x_test, z_test, p_test, H_base, g_kwargs)
+    G_plus = _call_g(g_fn, x_test, z_test, p_test, H_base + dH, g_kwargs)
     violation = np.max(G_base - G_plus)  # should be <= 0
     return {
         "max_violation": float(violation),
@@ -334,8 +353,8 @@ def check_antitonicity_z(
 
     Paper: condition (G3), p. 9 (c_theta <= 0 in support A_G).
     """
-    G_base = g_fn(x_test, z_test, p_test, H_test, **g_kwargs)
-    G_plus = g_fn(x_test, z_test + dz, p_test, H_test, **g_kwargs)
+    G_base = _call_g(g_fn, x_test, z_test, p_test, H_test, g_kwargs)
+    G_plus = _call_g(g_fn, x_test, z_test + dz, p_test, H_test, g_kwargs)
     violation = np.max(G_plus - G_base)  # should be <= 0
     return {
         "max_violation": float(violation),

@@ -1,0 +1,28 @@
+{
+  "experiment": "exp4",
+  "alpha": 0.3,
+  "lyapunov_satisfied": true,
+  "T_abs_at_0": {
+    "0.1": 0.0,
+    "0.2": 0.0,
+    "0.5": 0.0
+  },
+  "T_0_at_0": {
+    "0.1": 0.004791958700375171,
+    "0.2": 0.01344884449986905,
+    "0.5": 0.034876200740419305
+  },
+  "V_G_at_0": {
+    "0.1": 0.0055065865178263364,
+    "0.2": 0.013067592246277893,
+    "0.5": 0.0381887171967857
+  },
+  "ordering_at_t0.2": {
+    "T_abs < T_0": true,
+    "T_0 <= V_G": true
+  },
+  "branches_agree_away_from_0": true,
+  "G_strictly_larger_than_Gdagger_at_0": true,
+  "same_semigroup_42": true,
+  "deterministic_flow_correct": true
+}

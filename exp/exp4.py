@@ -171,7 +171,7 @@ def run_exp4(full_run: bool = False) -> dict:
     V_Gd = payoff_f_plus(x0_vals_42 + t_42)  # same
 
     semigroup_equal = float(np.max(np.abs(V_G - V_Gd))) < 1e-10
-    print(f"  V^G = V^{G^downarrow} (same semigroup): {semigroup_equal}")
+    print(f"  V^G = V^{{G^downarrow}} (same semigroup): {semigroup_equal}")
     print(f"  V_t f_+ at x0=[{', '.join(f'{v:.3f}' for v in V_G)}]")
 
     # Verify deterministic flow explicitly

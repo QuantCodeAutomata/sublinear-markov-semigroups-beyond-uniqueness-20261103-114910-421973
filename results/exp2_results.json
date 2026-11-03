@@ -1,0 +1,10 @@
+{
+  "experiment": "exp2",
+  "n_laws_tested": 8,
+  "n_in_RT": 8,
+  "max_supermartingale_violation": 0.046137280522733026,
+  "order_RT1_in_RT2": true,
+  "attainment_error": 0.009026525590414558,
+  "T_t_f_at_x0": 0.3326071110127374,
+  "max_E_RT_at_x0": 0.3235805854223228
+}

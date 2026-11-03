@@ -1,0 +1,14 @@
+{
+  "experiment": "exp6",
+  "ex42_avg_pde_error": 0.008077101945092072,
+  "ex42_errors_by_t": {
+    "0.25": 0.0036509611893096316,
+    "0.5": 0.0071106190090737265,
+    "1.0": 0.01346972563689286
+  },
+  "ctrl_max_err": 0.0638580642502716,
+  "ctrl_mean_err": 0.015106832744536907,
+  "ctrl_rel_err": 0.043368326931995924,
+  "ctrl_pde_stochastic_consistent": true,
+  "ctrl_pde_dominates_single_frac": 1.0
+}

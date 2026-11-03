@@ -140,16 +140,22 @@ def run_exp2(full_run: bool = False) -> dict:
     )
     RT1_membership = [r["in_RT"] for r in RT1_results]
     RT2_membership = [r["in_RT"] for r in RT_results]
-    order_res = test_order_isomorphism(RT1_membership, RT2_membership)
-    print(f"  Order: R^{{T1}} subset R^{{T2}}: {order_res['RT1_in_RT2']} "
-          f"(violations: {order_res['violations']})")
+    rng_ord = np.random.default_rng(config.SEED + 700)
+    order_res = test_order_isomorphism(
+        x0=x0, t=t_end, R=t_end,
+        payoff_fn=payoff_f_plus, g_fn=payoff_f_plus,
+        controls_1=subset_controls, controls_2=controls,
+        n_paths=min(n_paths, 500), dt=dt, rng=rng_ord,
+    )
+    print(f"  Order: R^{{T1}} subset R^{{T2}}: {order_res['RT1_subset_RT2']} "
+          f"(T1<=T2: {order_res['T1_leq_T2']})")
 
     # ------------------------------------------------------------------
     # 5. Representation test: T_t f(x) ~ max_{P in R^T} E^P[f(X_t)]
     # ------------------------------------------------------------------
     x_repr = np.array([x0])
     T_t_f = eval_semigroup(
-        SemigroupType.CONTROLLED, x_repr, t_end, payoff_f_plus, **eval_kwargs_T2
+        x_repr, t_end, payoff_f_plus, stype=SemigroupType.CONTROLLED, **eval_kwargs_T2
     )
     max_E_RT = np.max([
         float(np.mean(payoff_f_plus(p[:, -1])))
@@ -163,7 +169,7 @@ def run_exp2(full_run: bool = False) -> dict:
     # Plot: supermartingale violation per law
     # ------------------------------------------------------------------
     fig, ax = plt.subplots(figsize=(8, 4))
-    law_idxs = [r["law_index"] for r in RT_results]
+    law_idxs = list(range(len(RT_results)))
     viol_vals = [r["max_violation"] for r in RT_results]
     colors = ["steelblue" if r["in_RT"] else "salmon" for r in RT_results]
     ax.bar(law_idxs, viol_vals, color=colors)
@@ -183,7 +189,7 @@ def run_exp2(full_run: bool = False) -> dict:
         "n_laws_tested": n_laws,
         "n_in_RT": n_in_RT,
         "max_supermartingale_violation": max_viol,
-        "order_RT1_in_RT2": order_res["RT1_in_RT2"],
+        "order_RT1_in_RT2": order_res["RT1_subset_RT2"],
         "attainment_error": attain_err,
         "T_t_f_at_x0": float(T_t_f[0]),
         "max_E_RT_at_x0": max_E_RT,

@@ -1,0 +1,32 @@
+{
+  "experiment": "exp1",
+  "lyapunov_satisfied": false,
+  "lyapunov_max_violation": 0.005662460771363564,
+  "sublinear": true,
+  "homogeneity_error": 0.0,
+  "subadditivity_violation": -0.752952483387243,
+  "monotone_H": true,
+  "antitone_z": true,
+  "semigroup_max_error": 0.0317982279092234,
+  "semigroup_rel_error": 0.013576954378838654,
+  "sublinear_semigroup": true,
+  "domination_violation": 0.016179835376668006,
+  "generator_consistency": {
+    "f_plus": {
+      "max_diff_vs_G": 0.12917546492881177
+    },
+    "gaussian": {
+      "max_diff_vs_G": 0.21790407479372614
+    },
+    "tanh": {
+      "max_diff_vs_G": 0.35232447626825825
+    }
+  },
+  "V_vals_at_t0": {
+    "0.1": 0.07264433226982997,
+    "0.325": 0.15848058517125124,
+    "0.55": 0.19687682726198402,
+    "0.775": 0.2475713316277023,
+    "1.0": 0.287348413259528
+  }
+}

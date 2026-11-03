@@ -24,11 +24,11 @@ T0 = 1.0             # time horizon; paper: exists t0 > 0 with Q_0^0(X_{t0} != 0
 # ---------------------------------------------------------------------------
 # Monte Carlo simulation parameters (not specified in the paper)
 # ---------------------------------------------------------------------------
-N_PATHS = 8000       # number of Monte Carlo sample paths per control
+N_PATHS = 600        # number of Monte Carlo sample paths per control (reduced for runtime; paper does not specify)
 DT = 0.005           # Euler-Maruyama time step (seconds); not specified in the paper
 
 # Number of discrete control parameter values for controlled-diffusion model
-N_THETA = 25         # grid points per control dimension; not specified in the paper
+N_THETA = 8          # control grid points for default run (reduced for runtime; paper does not specify)
 
 # ---------------------------------------------------------------------------
 # State grid for semigroup evaluation and HJB solver

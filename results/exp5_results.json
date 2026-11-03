@@ -1,0 +1,18 @@
+{
+  "experiment": "exp5",
+  "G_Gdagger_max_excess": 1.0,
+  "G_globally_realizable_ex42": false,
+  "same_semigroup_ex42": true,
+  "controlled_diff_G_Gd": [
+    0.42767309264843467,
+    0.42623066001428034,
+    0.37639345573510863
+  ],
+  "ctrl_approximately_realizable": false,
+  "gen_downarrow_estimates": {
+    "f_plus": 0.00038432062237160185,
+    "gaussian": -0.000643405489751688,
+    "tanh": 0.47692015257617937,
+    "sin_env": 0.1591868947363437
+  }
+}

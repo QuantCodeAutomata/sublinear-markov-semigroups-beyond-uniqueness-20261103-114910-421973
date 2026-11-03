@@ -145,18 +145,18 @@ def run_exp1(full_run: bool = False) -> dict:
     sg_res = check_semigroup_property(
         x_check, s, t, payoff_fn, controls, n_paths, config.DT, rng_sg
     )
-    print(f"  Semigroup check (s={s}, t={t}): max_error={sg_res['max_error']:.4f}, "
-          f"rel_error={sg_res['rel_error']:.4f}")
+    print(f"  Semigroup check (s={s}, t={t}): max_abs_err={sg_res['max_abs_err']:.4f}, "
+          f"mean_abs_err={sg_res['mean_abs_err']:.4f}")
 
     # ------------------------------------------------------------------
     # 4. Sublinearity of V^G
     # ------------------------------------------------------------------
     rng_sub = np.random.default_rng(config.SEED + 200)
     sub_res = check_semigroup_sublinearity(
-        x_check, 0.3, payoff_f_plus, payoff_gaussian, lamda=2.0,
-        controls=controls, n_paths=n_paths // 2, dt=config.DT, rng=rng_sub
+        x_check, 0.3, payoff_f_plus, controls,
+        n_paths // 2, config.DT, rng_sub
     )
-    print(f"  V^G sublinear: {sub_res['sublinear']} (hom_err={sub_res['homogeneity_error']:.3f}, "
+    print(f"  V^G sublinear: {sub_res['is_sublinear']} (hom_err={sub_res['homogeneity_err']:.3f}, "
           f"sub_viol={sub_res['subadditivity_violation']:.3f})")
 
     # ------------------------------------------------------------------
@@ -166,7 +166,7 @@ def run_exp1(full_run: bool = False) -> dict:
     gen_results = {}
     for fn_dict in test_fns[:3]:  # first 3 test functions
         name = fn_dict["name"]
-        f_fn = lambda x, _f=fn_dict["f"], _xg=x_grid: np.interp(x, _xg, _f)
+        f_fn = lambda x, _f=fn_dict["f_arr"], _xg=x_grid: np.interp(x, _xg, _f)
         rng_gen = np.random.default_rng(config.SEED + 300)
         eval_kw = dict(
             n_paths=max(n_paths // 4, 500), dt=config.DT, controls=controls, rng=rng_gen
@@ -176,8 +176,7 @@ def run_exp1(full_run: bool = False) -> dict:
             config.H_VALUES, eval_kw
         )
         G_analytic = estimate_generator_analytic(
-            x_grid[10:51:5], fn_dict, G,
-            sigma_vals=sigma_arr, b_vals=b_arr, c_vals=c_arr
+            x_grid[10:51:5], fn_dict, G
         )
         max_diff = float(np.max(np.abs(gen_res["G_T_estimate"] - G_analytic[::1])))
         gen_results[name] = {"max_diff_vs_G": max_diff}
@@ -211,8 +210,8 @@ def run_exp1(full_run: bool = False) -> dict:
 
     # Plot 2: semigroup consistency
     ax = axes[1]
-    ax.plot(x_check, sg_res["direct"], label=f"V_{{s+t}} f (direct)", marker="o")
-    ax.plot(x_check, sg_res["composed"], label=f"V_s(V_t f) (composed)", marker="x")
+    ax.plot(x_check, sg_res["V_st"], label=f"V_{{s+t}} f (direct)", marker="o")
+    ax.plot(x_check, sg_res["V_s_Vt"], label=f"V_s(V_t f) (composed)", marker="x")
     ax.set_xlabel("x")
     ax.set_ylabel("Value")
     ax.set_title(f"Semigroup consistency (s={s}, t={t})")
@@ -245,9 +244,9 @@ def run_exp1(full_run: bool = False) -> dict:
         "subadditivity_violation": sublin["subadditivity_violation"],
         "monotone_H": mono_H["monotone_in_H"],
         "antitone_z": anti_z["antitone_in_z"],
-        "semigroup_max_error": sg_res["max_error"],
-        "semigroup_rel_error": sg_res["rel_error"],
-        "sublinear_semigroup": sub_res["sublinear"],
+        "semigroup_max_error": sg_res["max_abs_err"],
+        "semigroup_rel_error": sg_res["mean_abs_err"],
+        "sublinear_semigroup": sub_res["is_sublinear"],
         "domination_violation": dom_viol,
         "generator_consistency": gen_results,
         "V_vals_at_t0": {str(k): float(v[len(v) // 2]) for k, v in V_vals.items()},

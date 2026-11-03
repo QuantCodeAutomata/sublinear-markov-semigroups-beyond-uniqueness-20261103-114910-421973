@@ -76,26 +76,28 @@ def run_exp5(full_run: bool = False) -> dict:
     for fn_dict in test_fns[:4]:
         name = fn_dict["name"]
         # Exact: G_{V^G} = G^downarrow = p (Eq. from Section 4.3)
-        f_at_xpt = lambda x, _f=fn_dict["f"], _xg=x_grid_42: np.interp(x, _xg, _f)
+        f_arr = fn_dict["f_arr"]  # (N,) values on x_grid_42
+        f_call = fn_dict["f"]     # callable
+        f_at_xpt = lambda x, _f=f_arr, _xg=x_grid_42: np.interp(x, _xg, _f)
         G_est_list = []
         for h in [0.1, 0.05, 0.02, 0.01]:
             # V^G_h f(x) = f(x + h) for the deterministic flow semigroup
-            V_h_f = np.interp(x_grid_42 + h, x_grid_42 + h, fn_dict["f"])
-            # Actually: V^G_h f(x) = f(x + h)
-            # Need to evaluate f at (x + h); use interp on extended domain
             x_shifted = x_grid_42 + h
-            V_h = np.array([f_at_xpt(np.array([xi]))[0] for xi in x_shifted])
-            G_est = (V_h - fn_dict["f"]) / h
+            V_h = f_call(x_shifted)   # callable evaluated at shifted grid
+            G_est = (V_h - f_arr) / h
             G_est_list.append(float(np.mean(G_est)))
 
         gen_downarrow_estimates[name] = G_est_list[-1]  # smallest h
 
+        df_vals = fn_dict["df"](x_grid_42)
+        d2f_vals = fn_dict["d2f"](x_grid_42)
+
         # G_full(x, J^2 f): p + 1_0(x) * p^+
-        G_full_vals = g_example42(x_grid_42, fn_dict["f"], fn_dict["grad_f"], fn_dict["hess_f"])
+        G_full_vals = g_example42(x_grid_42, f_arr, df_vals, d2f_vals)
         gen_G_analytic_42[name] = float(np.mean(G_full_vals))
 
         # G^downarrow(x, J^2 f): p only
-        Gd_vals_fn = g_effective_42(x_grid_42, fn_dict["f"], fn_dict["grad_f"], fn_dict["hess_f"])
+        Gd_vals_fn = g_effective_42(x_grid_42, f_arr, df_vals, d2f_vals)
         gen_Gd_analytic_42[name] = float(np.mean(Gd_vals_fn))
 
         print(f"  [{name}] G^downarrow ~ {gen_downarrow_estimates[name]:.4f}, "
@@ -133,7 +135,7 @@ def run_exp5(full_run: bool = False) -> dict:
         name = fn_dict_c["name"]
         # G_ctrl already captures sigma_arr/b_arr/c_arr via closure — no extra kwargs needed
         G_analytic = estimate_generator_analytic(x_check, fn_dict_c, G_ctrl)
-        f_fn = lambda x, _f=fn_dict_c["f"], _xg=x_check: np.interp(x, _xg, _f)
+        f_fn = lambda x, _f=fn_dict_c["f_arr"], _xg=x_check: np.interp(x, _xg, _f)
         gen_res = estimate_generator(SemigroupType.CONTROLLED, x_check, f_fn, h_vals, eval_kw)
         G_Vg = gen_res["G_T_estimate"]
         diff = float(np.max(np.abs(G_Vg - G_analytic)))

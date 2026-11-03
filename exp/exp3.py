@@ -61,10 +61,10 @@ def run_exp3(full_run: bool = False) -> dict:
     # ------------------------------------------------------------------
     # G_full: the full specification; G_sub: the sub-specification
     # ------------------------------------------------------------------
-    def G_full(x, z, p, H):
+    def G_full(x, z, p, H, **_kw):
         return g_controlled_diffusion(x, z, p, H, sigma_arr_full, b_arr_full, c_arr_full)
 
-    def G_sub(x, z, p, H):
+    def G_sub(x, z, p, H, **_kw):
         return g_controlled_diffusion(x, z, p, H, sigma_arr_sub, b_arr_sub, c_arr_sub)
 
     # ------------------------------------------------------------------
@@ -90,26 +90,11 @@ def run_exp3(full_run: bool = False) -> dict:
     # ------------------------------------------------------------------
     print("  Checking semigroup domination T_sub <= V^G_full...")
     dom_res = check_domination(
-        sg_type_1=SemigroupType.CONTROLLED,
-        sg_type_2=SemigroupType.CONTROLLED,
-        x0_vals=x_check,
-        t_vals=[0.2, 0.5],
-        payoff_fns=[payoff_f_plus, payoff_gaussian],
-        n_paths=min(n_paths, 800),
-        dt=config.DT,
-        controls=controls_full,
-        rng=np.random.default_rng(config.SEED + 300),
+        x_check, 0.4, payoff_f_plus, controls_full, controls_sub,
+        min(n_paths, 800), config.DT, np.random.default_rng(config.SEED + 300),
     )
-    # Note: domination check uses the same sg_type but different controls;
-    # we compute manually for clarity
-    rng_dom = np.random.default_rng(config.SEED + 400)
-    V_sub = compute_VG(x_check, 0.4, payoff_f_plus, controls_sub,
-                       min(n_paths, 800), config.DT, rng_dom)
-    rng_full2 = np.random.default_rng(config.SEED + 500)
-    V_full = compute_VG(x_check, 0.4, payoff_f_plus, controls_full,
-                        min(n_paths, 800), config.DT, rng_full2)
-    dom_viol = float(np.max(V_sub - V_full))
-    dom_ok = dom_viol <= 0.05
+    dom_ok = dom_res["dominated"]
+    dom_viol = dom_res["max_violation"]
     print(f"  Domination T_sub <= V^G_full: ok={dom_ok}, max_viol={dom_viol:.4f}")
 
     # ------------------------------------------------------------------
@@ -140,8 +125,12 @@ def run_exp3(full_run: bool = False) -> dict:
     rng_gen2 = np.random.default_rng(config.SEED + 600)
     eval_kw2 = dict(n_paths=min(n_paths, 500), dt=config.DT,
                     controls=controls_sub, rng=rng_gen2)
-    f_fn = lambda x, _f=fn_dict["f"], _xg=x_check: np.interp(x, _xg, _f)
+    f_fn = lambda x, _f=fn_dict["f_arr"], _xg=x_check: np.interp(x, _xg, _f)
     gen_sub = estimate_generator(SemigroupType.CONTROLLED, x_check, f_fn, h_vals, eval_kw2)
+
+    # Extract domination semigroup values (computed at dom_res above, Section 4.1)
+    V_sub = dom_res["V_sub"]
+    V_full = dom_res["V_full"]
 
     # ------------------------------------------------------------------
     # Plot
