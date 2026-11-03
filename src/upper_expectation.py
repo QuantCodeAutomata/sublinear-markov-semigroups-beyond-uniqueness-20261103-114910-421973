@@ -21,6 +21,28 @@ def make_control_grid(
             for s, b, c in zip(sigma_vals, b_vals, c_vals)]
 
 
+def make_default_control_grid(
+    sigma_min: float = 0.2,
+    sigma_max: float = 1.0,
+    b_min: float = -0.5,
+    b_max: float = 0.5,
+    c_max: float = 0.3,
+    n_theta: int = 25,
+) -> list[dict]:
+    """Create a discrete control grid by sampling sigma, b, c uniformly.
+
+    Returns a list of n_theta control dicts, each with 'sigma', 'b', 'c'.
+    c <= 0 (killing), so we sample c in [-c_max, 0].
+
+    Paper: Section 1.3 — admissible coefficient set A_G.
+    """
+    rng = np.random.default_rng(0)
+    sigmas = rng.uniform(sigma_min, sigma_max, n_theta)
+    bs = rng.uniform(b_min, b_max, n_theta)
+    cs = rng.uniform(-c_max, 0.0, n_theta)
+    return make_control_grid(sigmas, bs, cs)
+
+
 def compute_VG(
     x0_vals: np.ndarray,
     t: float,
@@ -150,6 +172,65 @@ def check_semigroup_sublinearity(
         "subadditivity_violation": subadditivity_violation,
         "is_sublinear": homogeneity_err < 0.1 and subadditivity_violation < 0.1,
     }
+
+
+def compute_VG_alpha(
+    x0: float,
+    t: float,
+    payoff_fn: Callable[[np.ndarray], np.ndarray],
+    alpha: float,
+    n_paths: int,
+    dt: float,
+    rng: np.random.Generator,
+) -> float:
+    """Upper envelope over absorbing and zero-sojourn branches for Example 4.1.
+
+    V_t^{G_alpha} f(x0) = max(E^{abs}[f], E^{zs}[f])
+
+    Paper: Section 4.2, p. 30 — nonuniqueness example; canonical semigroup
+    is the upper envelope over all admissible laws.
+    """
+    X_abs, alive_abs = simulate_absorbing_branch(x0, t, dt, alpha, n_paths, rng)
+    X_zs, alive_zs = simulate_zero_sojourn_branch(x0, t, dt, alpha, n_paths, rng)
+    payoffs_abs = np.zeros(n_paths)
+    if np.any(alive_abs):
+        payoffs_abs[alive_abs] = payoff_fn(X_abs[alive_abs])
+    payoffs_zs = np.zeros(n_paths)
+    if np.any(alive_zs):
+        payoffs_zs[alive_zs] = payoff_fn(X_zs[alive_zs])
+    return float(max(np.mean(payoffs_abs), np.mean(payoffs_zs)))
+
+
+def compute_VG_diffusion(
+    x0_vals: np.ndarray,
+    t: float,
+    payoff_fn: Callable[[np.ndarray], np.ndarray],
+    sigma_fn: Callable[[np.ndarray], np.ndarray],
+    b_fn: Callable[[np.ndarray], np.ndarray],
+    killing_fn: Optional[Callable[[np.ndarray], np.ndarray]],
+    n_paths: int,
+    dt: float,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """V^G for a single-control diffusion with given coefficient functions.
+
+    Used in exp6 to compare a sub-family semigroup against the full V^G.
+
+    Paper: Section 5.2 — stochastic representation via admissible law family.
+    """
+    N = len(x0_vals)
+    V = np.zeros(N)
+    for i, x0 in enumerate(x0_vals):
+        X_end, alive = _simulate_with_kill_fn(
+            x0=x0, t_end=t, dt=dt,
+            b_fn=b_fn, sigma_fn=sigma_fn, killing_fn=killing_fn,
+            n_paths=n_paths, rng=rng,
+        )
+        payoffs = np.zeros(n_paths)
+        if np.any(alive):
+            payoffs[alive] = payoff_fn(X_end[alive])
+        V[i] = float(np.mean(payoffs))
+    return V
 
 
 def compute_canonical_upper_perron(

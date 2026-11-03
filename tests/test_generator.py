@@ -31,42 +31,50 @@ class TestEstimateGenerator:
             {"sigma": 1.2, "b": 0.0, "c": 0.0},
         ]
 
+    def _eval_kwargs(self, controls, n_paths=200, dt=0.01, seed=500):
+        return {
+            "controls": controls,
+            "n_paths": n_paths,
+            "dt": dt,
+            "rng": np.random.default_rng(seed),
+        }
+
     def test_output_shape(self, x_grid_small, controls):
+        from src.semigroup import SemigroupType
         result = estimate_generator(
+            SemigroupType.CONTROLLED,
             x_pts=x_grid_small,
             payoff_fn=lambda x: np.exp(-0.5 * x ** 2),
             h_vals=[0.1, 0.05],
-            controls=controls,
-            n_paths=200, dt=0.01,
-            rng=np.random.default_rng(500),
+            eval_kwargs=self._eval_kwargs(controls),
         )
         assert "gen_estimates" in result
         for h in [0.1, 0.05]:
             assert result["gen_estimates"][h].shape == x_grid_small.shape
 
     def test_generator_finite_values(self, x_grid_small, controls):
+        from src.semigroup import SemigroupType
         result = estimate_generator(
+            SemigroupType.CONTROLLED,
             x_pts=x_grid_small,
             payoff_fn=lambda x: np.exp(-0.5 * x ** 2),
             h_vals=[0.05],
-            controls=controls,
-            n_paths=200, dt=0.01,
-            rng=np.random.default_rng(501),
+            eval_kwargs=self._eval_kwargs(controls, seed=501),
         )
         gen_vals = result["gen_estimates"][0.05]
         assert np.all(np.isfinite(gen_vals)), "Generator estimates must be finite"
 
     def test_generator_zero_diffusion_sigma0(self):
-        """For sigma=0, b=0, c=0: generator of any f should be ~0."""
+        """For sigma~0, b=0, c=0: generator of any f should be ~0."""
+        from src.semigroup import SemigroupType
         controls = [{"sigma": 1e-8, "b": 0.0, "c": 0.0}]
         x_pts = np.array([0.0, 0.5, 1.0])
         result = estimate_generator(
+            SemigroupType.CONTROLLED,
             x_pts=x_pts,
             payoff_fn=lambda x: np.exp(-0.5 * x ** 2),
             h_vals=[0.05],
-            controls=controls,
-            n_paths=100, dt=0.01,
-            rng=np.random.default_rng(502),
+            eval_kwargs=self._eval_kwargs(controls, n_paths=100, seed=502),
         )
         gen_h = result["gen_estimates"][0.05]
         assert np.all(np.abs(gen_h) < 0.5), (
@@ -75,29 +83,34 @@ class TestEstimateGenerator:
 
 
 class TestEstimateGeneratorAnalytic:
-    """Analytic (sympy-based) generator estimation for smooth functions."""
+    """Analytic generator estimation via fn_dict + spec_fn."""
 
     def test_brownian_generator(self):
-        """For sigma=1, b=0: generator of f(x) = x^2 is 1 = 0.5 * 2 * sigma^2."""
-        result = estimate_generator_analytic(
-            x_pts=np.array([0.0]),
-            sigma=1.0, b=0.0,
-            f_expr="x**2",
-        )
-        # G f(x) = 0.5 sigma^2 * f''(x) = 0.5 * 1 * 2 = 1
-        gen = result["gen_values"]
-        assert float(gen[0]) == pytest.approx(1.0, abs=1e-6)
+        """For G = 0.5*sigma^2*H, generator of f(x)=x^2 at x=0 is sigma^2."""
+        sigma = 1.0
+        fn_dict = {
+            "f": lambda x: x ** 2,
+            "df": lambda x: 2.0 * x,
+            "d2f": lambda x: 2.0 * np.ones_like(x),
+        }
+        spec_fn = lambda x, z, p, H: 0.5 * sigma ** 2 * H
+        x_pts = np.array([0.0, 1.0])
+        result = estimate_generator_analytic(x_pts, fn_dict, spec_fn)
+        # G f(x) = 0.5 * 1^2 * f''(x) = 0.5 * 2 = 1 at every x
+        assert np.allclose(result, 1.0, atol=1e-9)
 
     def test_drift_contribution(self):
-        """Generator of f(x) = x with drift b: G f = b * f' = b."""
+        """Generator of f(x) = x with drift spec G = b*p: G f = b."""
         b_val = 0.5
-        result = estimate_generator_analytic(
-            x_pts=np.array([0.0, 1.0, 2.0]),
-            sigma=0.0, b=b_val,
-            f_expr="x",
-        )
-        gen = result["gen_values"]
-        assert np.allclose(gen, b_val, atol=1e-6)
+        fn_dict = {
+            "f": lambda x: x.copy(),
+            "df": lambda x: np.ones_like(x),
+            "d2f": lambda x: np.zeros_like(x),
+        }
+        spec_fn = lambda x, z, p, H: b_val * p
+        x_pts = np.array([0.0, 1.0, 2.0])
+        result = estimate_generator_analytic(x_pts, fn_dict, spec_fn)
+        assert np.allclose(result, b_val, atol=1e-9)
 
 
 class TestCheckGeneratorBound:

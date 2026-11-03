@@ -126,6 +126,11 @@ def g_effective_42(
     return p + np.zeros_like(x)
 
 
+# Aliases used by exp scripts
+g_alpha = g_example41
+g_example42_downarrow = g_effective_42
+
+
 def g_controlled_diffusion(
     x: np.ndarray,
     z: np.ndarray,
@@ -178,34 +183,57 @@ def g_controlled_diffusion(
 # ---------------------------------------------------------------------------
 
 def check_lyapunov(
-    x_grid: np.ndarray,
+    G_or_xgrid,
+    phi_fn=None,
+    grad_phi_fn=None,
+    hess_phi_fn=None,
+    x_grid=None,
     *,
-    alpha: float,
+    alpha: float | None = None,
     c_phi: float = 1.0,
+    **ignored_kwargs,
 ) -> dict:
-    """Check Lyapunov condition for Example 4.1 with phi(x) = 1 + x^2.
+    """Check Lyapunov condition G(x, phi, grad_phi, Hess_phi) <= c_phi * phi(x).
 
-    Condition: G_alpha(x, phi(x), grad_phi(x), Hess_phi(x)) <= c_phi * phi(x)
-    where phi(x) = 1 + x^2, grad_phi(x) = 2x, Hess_phi(x) = 2.
-
-    G_alpha(x, z, p, H) = 0.5 * a_alpha(x) * H
-    => G_alpha(x, phi, 2x, 2) = 0.5 * a_alpha(x) * 2 = a_alpha(x)
-    a_alpha(x) <= 1 <= 1 * (1 + x^2) = c_phi * phi(x) for all x.
+    Accepts two call conventions:
+      Generic: check_lyapunov(G, phi_fn, grad_phi_fn, hess_phi_fn, x_grid, c_phi=...)
+      Example 4.1: check_lyapunov(x_grid, alpha=alpha, c_phi=...)
 
     Paper: Assumption 2.2 (Lyapunov condition, p. 8).
 
-    Returns dict with 'lyapunov_satisfied', 'max_ratio', 'C_phi'.
+    Returns dict with 'satisfied', 'max_violation', 'lyapunov_satisfied', 'max_ratio', 'C_phi'.
     """
-    phi_vals = 1.0 + x_grid ** 2
-    G_vals = a_alpha(x_grid, alpha)  # = 0.5 * a_alpha * Hess_phi
-    ratio = G_vals / np.maximum(phi_vals, 1e-12)
-    max_ratio = float(np.max(ratio))
+    if callable(G_or_xgrid):
+        # Generic signature: (G, phi_fn, grad_phi_fn, hess_phi_fn, x_grid, ...)
+        G = G_or_xgrid
+        xg = x_grid
+        phi_vals = phi_fn(xg)
+        grad_vals = grad_phi_fn(xg)
+        hess_vals = hess_phi_fn(xg)
+        G_phi = G(xg, phi_vals, grad_vals, hess_vals)
+        viol = G_phi - c_phi * phi_vals
+        max_violation = float(np.max(viol))
+        satisfied = max_violation <= 1e-9
+        ratio = G_phi / np.maximum(phi_vals, 1e-12)
+        max_ratio = float(np.max(ratio))
+    else:
+        # Example 4.1 signature: (x_grid, alpha=alpha, c_phi=...)
+        xg = G_or_xgrid
+        if alpha is None:
+            raise ValueError("alpha must be provided when x_grid is first arg")
+        phi_vals = 1.0 + xg ** 2
+        G_phi = a_alpha(xg, alpha)  # G_alpha(x, phi, 2x, 2) = a_alpha(x)
+        viol = G_phi - c_phi * phi_vals
+        max_violation = float(np.max(viol))
+        satisfied = max_violation <= 1e-9
+        ratio = G_phi / np.maximum(phi_vals, 1e-12)
+        max_ratio = float(np.max(ratio))
     return {
-        "lyapunov_satisfied": max_ratio <= c_phi + 1e-9,
+        "satisfied": satisfied,
+        "max_violation": max_violation,
+        "lyapunov_satisfied": satisfied,
         "max_ratio": max_ratio,
         "C_phi": c_phi,
-        "phi_vals": phi_vals,
-        "G_vals": G_vals,
     }
 
 

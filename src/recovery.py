@@ -77,46 +77,90 @@ test_supermartingale_orbit.__test__ = False  # type: ignore[attr-defined]
 
 
 def classify_laws_into_RT(
-    x0: float,
-    R: float,
-    g_fns: List[Callable[[np.ndarray], np.ndarray]],
-    candidate_controls: list,
-    semigroup_controls: list,
-    n_paths: int,
-    dt: float,
-    rng: np.random.Generator,
-) -> dict:
-    """Test each candidate control and classify it as being in R^T or not.
-
-    A control is admitted if the supermartingale test passes for all g_fns.
+    x0=None,
+    R: float = 0.5,
+    g_fns: List[Callable[[np.ndarray], np.ndarray]] | None = None,
+    candidate_controls: list | None = None,
+    semigroup_controls: list | None = None,
+    n_paths: int = 500,
+    dt: float = 0.05,
+    rng: np.random.Generator | None = None,
+    *,
+    law_paths_list: list | None = None,
+    t_grids: list | None = None,
+    sg_type=None,
+    eval_kwargs: dict | None = None,
+    n_test_times: int = 2,
+) -> "dict | list":
+    """Classify candidate laws into R^T via supermartingale orbit test.
 
     Paper: Section 3.2 — R^T_{t,x} is the largest stable family for T.
 
-    Parameters
-    ----------
-    x0                : initial state
-    R                 : terminal horizon
-    g_fns             : list of payoff functions to test
-    candidate_controls: list of control dicts to classify
-    semigroup_controls: controls defining the semigroup T
-    n_paths           : Monte Carlo paths
-    dt                : time step
-    rng               : numpy Generator
+    Supports two call conventions:
 
-    Returns
-    -------
-    dict with 'n_admitted', 'admitted_indices', 'results'.
+    Old API (used by tests):
+        classify_laws_into_RT(x0, R, g_fns, candidate_controls,
+                              semigroup_controls, n_paths, dt, rng)
+        Returns dict with 'n_admitted', 'admitted_indices', 'results'.
+
+    New API (used by exp2):
+        classify_laws_into_RT(law_paths_list=..., t_grids=..., sg_type=...,
+                              eval_kwargs=..., R=..., g_fns=..., n_test_times=...)
+        Returns list of dicts, one per law, each with 'in_RT', 'max_violation'.
     """
+    from src.upper_expectation import compute_VG
+
+    if law_paths_list is not None:
+        # New API: test each provided law (paths array) against the semigroup T.
+        # For each law and payoff g: check E^P[g(X_R)] <= T_R g(x0).
+        # T_R g(x0) is the upper expectation under the semigroup (the max).
+        controls = eval_kwargs.get("controls", []) if eval_kwargs else []
+        ep_n_paths = eval_kwargs.get("n_paths", 500) if eval_kwargs else 500
+        ep_dt = eval_kwargs.get("dt", 0.05) if eval_kwargs else 0.05
+        ep_rng = eval_kwargs.get("rng", np.random.default_rng(0)) if eval_kwargs else np.random.default_rng(0)
+        _g_fns = g_fns or []
+
+        out = []
+        for paths, t_grid in zip(law_paths_list, t_grids):
+            max_viol = 0.0
+            in_rt = True
+            for g_fn in _g_fns:
+                # E^P[g(X_R)] from provided paths (terminal column)
+                terminal = paths[:, -1]
+                ep_g = float(np.mean(g_fn(terminal)))
+                # T_R g(x0) via semigroup (upper expectation, the supremum)
+                x0_arr = np.array([paths[0, 0]])
+                t_R = t_grid[-1]
+                t_ep_rng = np.random.default_rng(ep_rng.integers(2**31))
+                sg_val = float(compute_VG(
+                    x0_arr, t_R, g_fn, controls, ep_n_paths, ep_dt, t_ep_rng
+                )[0]) if controls else ep_g
+                # Supermartingale: E^P[g(X_R)] <= T_R g(x0)
+                viol = ep_g - sg_val
+                if viol > max_viol:
+                    max_viol = viol
+                if viol > 0.05:  # tolerance for numerical error
+                    in_rt = False
+            out.append({"in_RT": in_rt, "max_violation": max_viol})
+        return out
+
+    # Old API: classify each candidate_controls element
+    x0 = float(x0) if x0 is not None else 0.0
+    if g_fns is None:
+        g_fns = []
+    if rng is None:
+        rng = np.random.default_rng(0)
+    _semict = semigroup_controls or []
     s_vals = np.linspace(0.0, R, 4)
     admitted = []
     results = []
-    for idx, ctrl in enumerate(candidate_controls):
+    for idx, ctrl in enumerate(candidate_controls or []):
         passed_all = True
         for g_fn in g_fns:
             res = test_supermartingale_orbit(
                 x0=x0, R=R, g_fn=g_fn, s_vals=s_vals,
                 candidate_controls=[ctrl],
-                semigroup_controls=semigroup_controls,
+                semigroup_controls=_semict,
                 n_paths=n_paths, dt=dt, rng=rng,
             )
             if not res["is_supermartingale"]:
